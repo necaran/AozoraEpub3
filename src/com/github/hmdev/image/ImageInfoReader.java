@@ -149,42 +149,50 @@ public class ImageInfoReader
 		if (srcImageFileName == null || srcImageFileName.isEmpty()) {
 			return null;
 		}
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		//拡張子修正
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".png");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".jpg");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".jpeg");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".gif");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".webp");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
 
+		// 元のファイル名が存在する場合
+		if (this.hasImage(srcImageFileName)) {
+			return srcImageFileName;
+		}
 
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".PNG");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".JPG");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".JPEG");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".GIF");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".WEBP");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".Png");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".Jpg");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".Jpeg");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".Gif");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".Webp");
-		if (this.hasImage(srcImageFileName)) return srcImageFileName;
-		
+		// 拡張子を取得
+		int extPos = srcImageFileName.lastIndexOf('.');
+
+		// 拡張子がない場合は修正できない
+		if (extPos < 0) {
+			return null;
+		}
+
+		// 拡張子以外の部分
+		String baseName = srcImageFileName.substring(0, extPos);
+
+		// 対応する拡張子
+		String[] extensions = {
+				".png",
+				".jpg",
+				".jpeg",
+				".gif",
+				".webp",
+				".PNG",
+				".JPG",
+				".JPEG",
+				".GIF",
+				".WEBP",
+				".Png",
+				".Jpg",
+				".Jpeg",
+				".Gif",
+				".Webp"
+		};
+
+		for (String extension : extensions) {
+			String imageFileName = baseName + extension;
+
+			if (this.hasImage(imageFileName)) {
+				return imageFileName;
+			}
+		}
+
 		return null;
 	}
 	
