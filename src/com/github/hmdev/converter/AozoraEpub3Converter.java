@@ -776,7 +776,7 @@ public class AozoraEpub3Converter
 				} else if (lowerChukiTag.startsWith("<img")) {
 					//src=の値抽出
 					String imageFileName = this.getTagAttr(chukiTag, "src");
-					if (imageFileName != null) {
+					if (imageFileName != null && !imageFileName.isEmpty()) {
 						imageInfoReader.addImageFileName(imageFileName);//画像がなければそのまま追加
 						if (bookInfo.firstImageLineNum == -1) {
 							//小さい画像は無視

@@ -145,6 +145,10 @@ public class ImageInfoReader
 	
 	/** 拡張子修正 大文字小文字は3パターンのみ */
 	public String correctExt(String srcImageFileName) {
+		// null または空文字なら画像なし
+		if (srcImageFileName == null || srcImageFileName.isEmpty()) {
+			return null;
+		}
 		if (this.hasImage(srcImageFileName)) return srcImageFileName;
 		//拡張子修正
 		srcImageFileName = srcImageFileName.replaceFirst("\\.\\w+$", ".png");
@@ -379,7 +383,11 @@ public class ImageInfoReader
 	private final Map<String, String> imageAltMap = new LinkedHashMap<>();
 
 	public void addImageAlt(String fileName, String altText) {
-		imageAltMap.put(correctExt(fileName), altText);
+		String correctFileName = correctExt(fileName);
+		if (correctFileName == null) {
+			return;
+		}
+		imageAltMap.put(correctFileName, altText);
 	}
 
 	public String getImageAlt(String fileName) {

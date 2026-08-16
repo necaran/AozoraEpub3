@@ -52,6 +52,13 @@ public class ImageInfo
 	/** ファイルから画像情報を生成 */
 	static public ImageInfo getImageInfo(File imageFile) throws IOException
 	{
+		if (imageFile == null) {
+			return null;
+		}
+
+		if (!imageFile.isFile()) {
+			return null;
+		}
 		BufferedInputStream bis = new BufferedInputStream(new FileInputStream(imageFile));
 		ImageInfo imageInfo = ImageInfo.getImageInfo(bis);
 		bis.close();
