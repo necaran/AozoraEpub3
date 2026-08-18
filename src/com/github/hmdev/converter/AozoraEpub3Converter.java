@@ -2591,6 +2591,10 @@ public class AozoraEpub3Converter
 		if (rubyStart != -1) {
 			// ルビ開始チェック中で漢字以外ならキャンセルして出力
 			convertTcyText(buf, ch, rubyStart, end, noTcy);
+		} else if (inRuby && rubyTopStart != -1) {
+			// ルビ開始と誤認したまま行末に到達した場合は
+			// 「《」以降をそのまま出力
+			convertTcyText(buf, ch, rubyTopStart, end, noTcy);
 		}
 
 		return buf;
