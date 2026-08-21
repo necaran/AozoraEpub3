@@ -1384,10 +1384,10 @@ public class AozoraEpub3Converter
 						//特殊文字は 前に※をつけて文字出力時に例外処理
 						switch (gaiji.charAt(0)) {
 						case '※': buf.append('※'); break;
-						case '》': buf.append('※'); break;
-						case '《': buf.append('※'); break;
-						case '｜': buf.append('※'); break;
-						case '＃': buf.append('※'); break;
+						case '》': buf.append(CharUtils.ESCAPE_MARKER); break;
+						case '《': buf.append(CharUtils.ESCAPE_MARKER); break;
+						case '｜': buf.append(CharUtils.ESCAPE_MARKER); break;
+						case '＃': buf.append(CharUtils.ESCAPE_MARKER); break;
 						}
 					}
 					buf.append(gaiji);
@@ -2468,6 +2468,24 @@ public class AozoraEpub3Converter
 		boolean noTcyPre = noTcy;
 		for (int i=begin; i<end; i++) {
 
+			/*
+			 * 内部エスケープ文字
+			 *
+			 * ESCAPE_MARKER《
+			 * ESCAPE_MARKER》
+			 * ESCAPE_MARKER｜
+			 *
+			 * は、次の1文字をリテラルとして扱う。
+			 *
+			 * 重要:
+			 * 《 / 》 / ｜ のルビ判定を行わない。
+			 */
+			if (ch[i] == CharUtils.ESCAPE_MARKER) {
+				if (i + 1 < end) {
+					convertReplacedChar(buf, ch, ++i, noTcy);
+				}
+				continue;
+			}
 			//縦中横と横書きの中かチェック
 			if (!noTcy && noTcyStart.contains(i)) {
 				//未処理の文字列が残っていないなら noTcy と同じ値を設定。残っているなら noTcy の値を保存。
@@ -2483,7 +2501,7 @@ public class AozoraEpub3Converter
 			switch (ch[i]) {
 			case '｜':
 				//エスケープ文字なら処理しない
-				if (!CharUtils.isEscapedChar(ch, i)) {
+				if (!CharUtils.isInternalEscapedChar(ch, i)) {
 					//前まで出力
 					if (rubyStart != -1) convertTcyText(buf, ch, rubyStart, i, noTcy);
 					rubyStart = i + 1; noTcyPre = noTcy;
@@ -2492,7 +2510,7 @@ public class AozoraEpub3Converter
 				break;
 			case '《':
 				//エスケープ文字なら処理しない
-				if (!CharUtils.isEscapedChar(ch, i)) {
+				if (!CharUtils.isInternalEscapedChar(ch, i)) {
 					inRuby = true;
 					rubyTopStart = i;
 				}
@@ -2502,7 +2520,7 @@ public class AozoraEpub3Converter
 			// ルビ内ならルビの最後でrubyタグ出力
 			if (inRuby) {
 				// ルビ終わり エスケープ文字なら処理しない
-				if (ch[i] == '》' && !CharUtils.isEscapedChar(ch, i)) {
+				if (ch[i] == '》' && !CharUtils.isInternalEscapedChar(ch, i)) {
 					if (rubyStart != -1 && rubyTopStart != -1) {
                         //長すぎるルビを警告
                         if (rubyTopStart-rubyStart >= 30) {
@@ -3001,6 +3019,15 @@ public class AozoraEpub3Converter
 			}
 			//自動縦中横で出力していたらcontinueしていてここは実行されない
 			convertReplacedChar(buf, ch, i, noTcy);
+			
+			/* ESCAPE_MARKERの消去処理
+			if (ch[i] == CharUtils.ESCAPE_MARKER) {
+				if (i + 1 < end) {
+					convertReplacedChar(buf, ch, ++i, noTcy);
+				}
+				continue;
+			}
+			*/
 		}
 	}
 

@@ -191,28 +191,54 @@ public class CharUtils
 	}
 	
 	/** ルビを除去 特殊文字のエスケープ文字 ※※ ※《 ※》 等が含まれる */
+	/** ルビを除去
+	 * 内部エスケープ文字 ESCAPE_MARKER を使用
+	 *
+	 * ESCAPE_MARKER《 → 《
+	 * ESCAPE_MARKER》 → 》
+	 * ｜《文字》 → ルビを除去
+	 */
 	static public String removeRuby(String text)
 	{
 		StringBuilder buf = new StringBuilder();
 		char[] ch = text.toCharArray();
 		boolean inRuby = false;
-		for (int i=0; i<ch.length; i++) {
-			if (inRuby) {
-				if (ch[i] == '》' && !CharUtils.isEscapedChar(ch, i)) inRuby = false;
-			} else {
-				switch (ch[i]) {
-				case '｜':
-					if (CharUtils.isEscapedChar(ch, i)) buf.append(ch[i]); 
-					break;
-				case '《':
-					if (CharUtils.isEscapedChar(ch, i)) buf.append(ch[i]);
-					else inRuby = true;
-					break;
-				default:
-                    buf.append(ch[i]);
+
+		for (int i = 0; i < ch.length; i++) {
+
+			// 内部エスケープ文字
+			if (ch[i] == ESCAPE_MARKER) {
+				// ESCAPE_MARKER + 1文字をリテラルとして出力
+				if (i + 1 < ch.length) {
+					buf.append(ch[++i]);
 				}
+				continue;
+			}
+
+			if (inRuby) {
+				// ルビ終了
+				if (ch[i] == '》') {
+					inRuby = false;
+				}
+				continue;
+			}
+
+			switch (ch[i]) {
+				case '｜':
+					// ルビの親文字指定
+					break;
+
+				case '《':
+					// エスケープされていない《はルビ開始
+					inRuby = true;
+					break;
+
+				default:
+					buf.append(ch[i]);
+					break;
 			}
 		}
+
 		return buf.toString();
 	}
 	
@@ -237,7 +263,18 @@ public class CharUtils
 		return escaped;
 	}
 	
+	/** 内部エスケープマーカー*/
+	public static final char ESCAPE_MARKER = '\u0001';
 	
+	/** 内部エスケープ用API*/
+	static public boolean isInternalEscapedChar(char[] ch, int idx)
+	{
+		return idx > 0 && ch[idx - 1] == ESCAPE_MARKER;
+	}
+	static public boolean isInternalEscapedChar(StringBuilder ch, int idx)
+	{
+		return idx > 0 && ch.charAt(idx - 1) == ESCAPE_MARKER;
+	}
 	/** HTML特殊文字をエスケープ */
 	static public String escapeHtml(String text)
 	{
@@ -250,7 +287,7 @@ public class CharUtils
 	static public String getChapterName(String line, int maxLength, boolean reduce)
 	{
 		String name = line.replaceAll("［＃.+?］", "")//注記除去
-				.replaceAll("※([※《》［］〔〕｜])", "$1") //エスケープ文字から※除外
+				.replaceAll(String.valueOf(CharUtils.ESCAPE_MARKER), "")//エスケープ文字から※除外
 				.replaceAll("\t", " ").replaceFirst("^[ |　]+", "").replaceFirst("[ |　]+$",""); //前後の不要な文字所除去
 		if (reduce) name = name.replaceAll("([=＝\\-―─])+", "$1");//連続する記号は1つに
 		//タグはimgとaを削除
