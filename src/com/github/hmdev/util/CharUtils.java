@@ -275,6 +275,21 @@ public class CharUtils
 	{
 		return idx > 0 && ch.charAt(idx - 1) == ESCAPE_MARKER;
 	}
+
+	/** 内部エスケープマーカーの削除*/
+	static public String removeInternalEscape(String text)
+	{
+		return text.replace(String.valueOf(ESCAPE_MARKER), "");
+	}
+	static public void removeInternalEscape(StringBuilder buf)
+	{
+		for (int i = buf.length() - 1; i >= 0; i--) {
+			if (buf.charAt(i) == ESCAPE_MARKER) {
+				buf.deleteCharAt(i);
+			}
+		}
+	}
+	
 	/** HTML特殊文字をエスケープ */
 	static public String escapeHtml(String text)
 	{
