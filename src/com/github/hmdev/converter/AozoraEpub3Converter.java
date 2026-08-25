@@ -1591,7 +1591,23 @@ public class AozoraEpub3Converter
 		} while (m.find());
 
 		//置換後文字列を返却
+		CharUtils.removeInternalEscape(buf);
 		return buf.toString();
+	}
+	/**
+	 * index位置から1論理文字戻る。
+	 *
+	 * ESCAPE_MARKER + 文字 は1文字として扱う。
+	 */
+	private int previousCharIndex(StringBuilder buf, int index)
+	{
+		if (index > 0
+				&& buf.charAt(index - 1) == CharUtils.ESCAPE_MARKER) {
+
+			return index - 2;
+		}
+
+		return index - 1;
 	}
 	/** 前方参照注記の前タグ挿入位置を取得 */
 	private int getTargetStart(StringBuilder buf, int chukiTagStart, int chOffset, int targetLength)
@@ -1602,44 +1618,57 @@ public class AozoraEpub3Converter
 		int length = 0;
 		//間にあるルビと注記タグは除外 ※※※》等のエスケープをチェックする
 		while (targetLength > length && idx >= 0) {
-			switch (buf.charAt(idx)) {
-			case '》':
-				idx--;
-				//エスケープ文字
-				if (CharUtils.isEscapedChar(buf, idx)) {
-					length++;
-					break;
-				}
-				while (idx >= 0 && buf.charAt(idx) != '《' && !CharUtils.isEscapedChar(buf, idx)) {
-					idx--;
-				}
-				hasRuby = true;
-				break;
-			case '］':
-				idx--;
-				//エスケープ文字
-				if (CharUtils.isEscapedChar(buf, idx)) {
-					length++;
-					break;
-				}
-				while (idx >= 0 && buf.charAt(idx) != '［' && !CharUtils.isEscapedChar(buf, idx)) {
-					idx--;
-				}
-				break;
-			case '｜':
-				//エスケープ文字
-				if (CharUtils.isEscapedChar(buf, idx)) {
-					length++;
-				}
-				break;
-			default:
+			char c = buf.charAt(idx);
+			// 内部エスケープされた文字
+			if (CharUtils.isInternalEscapedChar(buf, idx)) {
 				length++;
+				idx = previousCharIndex(buf, idx);
+				continue;
 			}
-			idx--;
+			switch (c) {
+				case '》':
+					idx = previousCharIndex(buf, idx);
+					// ルビ開始 《 を探す
+					while (idx >= 0) {
+						if (buf.charAt(idx) == '《'
+								&& !CharUtils.isInternalEscapedChar(buf, idx)) {
+							hasRuby = true;
+							break;
+						}
+						idx = previousCharIndex(buf, idx);
+					}
+					break;
+				case '］':
+					idx = previousCharIndex(buf, idx);
+					// 注記開始 ［ を探す
+					while (idx >= 0) {
+						if (buf.charAt(idx) == '［'
+								&& !CharUtils.isInternalEscapedChar(buf, idx)) {
+							break;
+						}
+						idx = previousCharIndex(buf, idx);
+					}
+					break;
+				case '｜':
+					// 通常の ｜ はそのまま
+					break;
+				default:
+					length++;
+					idx = previousCharIndex(buf, idx);
+					continue;
+			}
+			idx = previousCharIndex(buf, idx);
 		}
-		//ルビがあれば先頭の｜を含める
-		if (hasRuby && idx >= 0 && buf.charAt(idx) == '｜') return idx;
-		//一つ戻す
+
+		// ルビがあれば先頭の｜を含める
+		if (hasRuby
+				&& idx >= 0
+				&& buf.charAt(idx) == '｜'
+				&& !CharUtils.isInternalEscapedChar(buf, idx)) {
+
+			return idx;
+		}
+
 		return idx + 1;
 	}
 
@@ -2481,6 +2510,9 @@ public class AozoraEpub3Converter
 			 * 《 / 》 / ｜ のルビ判定を行わない。
 			 */
 			if (ch[i] == CharUtils.ESCAPE_MARKER) {
+				// 内部エスケープなので、マーカー自体を通常文字として処理しない
+				// ただしマーカーはbufに保持する
+				buf.append(ch[i]);
 				if (i + 1 < end) {
 					convertReplacedChar(buf, ch, ++i, noTcy);
 				}
