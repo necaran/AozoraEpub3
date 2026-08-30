@@ -2512,9 +2512,9 @@ public class AozoraEpub3Converter
 			if (ch[i] == CharUtils.ESCAPE_MARKER) {
 				// 内部エスケープなので、マーカー自体を通常文字として処理しない
 				// ただしマーカーはbufに保持する
-				buf.append(ch[i]);
+				//buf.append(ch[i]);
 				if (i + 1 < end) {
-					convertReplacedChar(buf, ch, ++i, noTcy);
+					//convertReplacedChar(buf, ch, ++i, noTcy);
 				}
 				continue;
 			}
@@ -3110,6 +3110,8 @@ public class AozoraEpub3Converter
 		//NULL文字なら何も出力しない
 		if (ch[idx] == '\0') return;
 
+		// 内部エスケープマーカー自体は出力しない
+		if (ch[idx] == CharUtils.ESCAPE_MARKER) return;
 		//String str = latinConverter.toLatinGlyphString(ch);
 		//if (str != null) out.write(str);
 		//else out.write(ch);
