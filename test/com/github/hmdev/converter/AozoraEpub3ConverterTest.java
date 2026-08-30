@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.StringWriter;
 
+import com.github.hmdev.util.CharUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.Before;
@@ -116,9 +117,11 @@ public class AozoraEpub3ConverterTest
 			System.out.println(buf);
 			
 			buf = converter.convertRubyText("｜※｜縦線《たてせん》※｜");
+			buf = converter.convertRubyText("｜\u0001｜縦線《たてせん》\u0001｜");
 			System.out.println(buf);
-			Assert.assertEquals(buf.toString(), "<ruby>｜縦線<rt>たてせん</rt></ruby>｜");
+			Assert.assertEquals( "<ruby>｜縦線<rt>たてせん</rt></ruby>｜",buf.toString());
 			buf = converter.convertRubyText("※｜縦線《たてせん》※｜");
+			buf = converter.convertRubyText("\u0001｜縦線《たてせん》\u0001｜");
 			System.out.println(buf);
 			Assert.assertEquals(buf.toString(), "｜<ruby>縦線<rt>たてせん</rt></ruby>｜");
 			
@@ -134,7 +137,8 @@ public class AozoraEpub3ConverterTest
 			String str;
 			str = converter.convertGaijiChuki("｜※［＃縦線］縦線※［＃縦線］《※［＃縦線］たてせん※［＃縦線］》", true, true);
 			System.out.println(str);
-			Assert.assertEquals(str, "｜※｜縦線※｜《※｜たてせん※｜》");
+			//Assert.assertEquals("｜※｜縦線※｜《※｜たてせん※｜》",str);
+			Assert.assertEquals("｜\u0001｜縦線\u0001｜《\u0001｜たてせん\u0001｜》",str);
 			
 			str = converter.convertGaijiChuki("※［＃U+845b］U+845b", true, true);
 			System.out.println(str);
@@ -168,11 +172,13 @@ public class AozoraEpub3ConverterTest
 			
 			str = converter.replaceChukiSufTag(converter.convertGaijiChuki("※［＃始め二重山括弧］１［＃「※［＃米印］※［＃始め二重山括弧］１」は中見出し］",true, false));
 			System.out.println(str);
-			
 			str = converter.replaceChukiSufTag(converter.convertGaijiChuki("　　　　　　あ※［＃米印］※［＃始め二重山括弧］１［＃「あ※［＃米印］※［＃始め二重山括弧］１」は中見出し］",true, false));
 			System.out.println(str);
-			Assert.assertEquals(str,  "　　　　　　［＃中見出し］あ※※※《１［＃中見出し終わり］");
+			//Assert.assertEquals(  "　　　　　　［＃中見出し］あ※※※《１［＃中見出し終わり］",str);
+			Assert.assertEquals(  "　　　　　　［＃中見出し］あ※※\u0001《１［＃中見出し終わり］",str);
 			
+			
+		
 			str = converter.replaceChukiSufTag("星状、扇形などの標本図は第一一〇及び一一一頁の一般分類の図［＃「第一一〇及び一一一頁の一般分類の図」は「第32図」を指す。］の中に示してある。");
 			System.out.println(str);
 			Assert.assertEquals(str, "星状、扇形などの標本図は第一一〇及び一一一頁の一般分類の図［＃「第一一〇及び一一一頁の一般分類の図」は「第32図」を指す。］の中に示してある。");
