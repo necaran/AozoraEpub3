@@ -250,7 +250,7 @@ public class AozoraEpub3
 			//オプション指定を反映
 			boolean useFileName = false;//表題に入力ファイル名利用
 			String coverFileName = null;
-			String encType = "AUTO";//文字コードの初期設定を空に
+			String encType;//文字コードの初期設定を空に
 			String outExt = ".epub";
 			boolean autoFileName = true; //ファイル名を表題に利用
 			boolean vertical = true;
@@ -258,7 +258,9 @@ public class AozoraEpub3
 			if(commandLine.hasOption("t")) try { titleIndex = Integer.parseInt(commandLine.getOptionValue("t")); } catch (Exception e) {}//表題
 			if(commandLine.hasOption("tf")) useFileName = true;
 			if(commandLine.hasOption("c")) coverFileName = commandLine.getOptionValue("c");
-			if(commandLine.hasOption("enc")) encType = commandLine.getOptionValue("enc");
+			encType = commandLine.hasOption("enc")
+					? commandLine.getOptionValue("enc")
+					: "AUTO";
 			if(commandLine.hasOption("ext")) outExt = commandLine.getOptionValue("ext");
 			if(commandLine.hasOption("of")) autoFileName = false;
 			//if(commandLine.hasOption("id")) withMarkId = true;
@@ -363,13 +365,19 @@ public class AozoraEpub3
 
 					BookInfo bookInfo = null;
 					//文字コード判別
-					String encauto;
+					String currentEncType = encType;
 
-					encauto=AozoraEpub3.getTextCharset(srcFile, ext, imageInfoReader, txtIdx);
-					if (Objects.equals(encauto, "SHIFT_JIS"))encauto="MS932";
-					if (encType.equals("AUTO")) encType =encauto;
+					if ("AUTO".equals(currentEncType)) {
+						currentEncType = getTextCharset(
+								srcFile, ext, imageInfoReader, txtIdx
+						);
+
+						if ("SHIFT_JIS".equals(currentEncType)) {
+							currentEncType = "MS932";
+						}
+					}
 					if (!imageOnly) {
-						bookInfo = AozoraEpub3.getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverter, encType, BookInfo.TitleType.indexOf(titleIndex), false);
+						bookInfo = AozoraEpub3.getBookInfo(srcFile, ext, txtIdx, imageInfoReader, aozoraConverter, currentEncType, BookInfo.TitleType.indexOf(titleIndex), false);
 						Objects.requireNonNull(bookInfo).vertical = vertical;
 						bookInfo.insertTocPage = tocPage;
 						bookInfo.setTocVertical(tocVertical);
@@ -453,7 +461,7 @@ public class AozoraEpub3
 					AozoraEpub3.convertFile(
 							srcFile, ext, outFile,
 							aozoraConverter, writer,
-							encType, bookInfo, imageInfoReader, txtIdx);
+							currentEncType, bookInfo, imageInfoReader, txtIdx);
 				}
 			}
 		} catch (Exception e) {
